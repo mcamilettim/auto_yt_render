@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "formatos": {
+    "short": [
+      1080,
+      1920
+    ],
+    "largo": [
+      1920,
+      1080
+    ]
+  },
+  "fps": [
+    24
+  ],
+  "calidades": [
+    "rapida",
+    "completa"
+  ],
+  "sets": {
+    "taller_1890": "Victorian workshop with workbench, tools, window light",
+    "puerto_1890": "Harbour dock with crates, ship hull, sea",
+    "calle_victoriana": "Cobblestone street, lamp posts, brick shop fronts",
+    "fabrica_1890": "Factory floor with belts and machines",
+    "palacio_chino": "Qing dynasty palace courtyard, red columns",
+    "sala_moderna": "Modern living room, sofa, window",
+    "escritorio_estudio": "Study desk with books and lamp",
+    "campo_abierto": "Open meadow with hills and sky"
+  },
+  "luces": [
+    "dia",
+    "atardecer",
+    "noche_velas",
+    "interior_calido",
+    "interior_frio"
+  ],
+  "camara": [
+    "fijo",
+    "dolly_in",
+    "dolly_out",
+    "paneo_izq",
+    "paneo_der",
+    "orbita",
+    "grua_arriba"
+  ],
+  "planos": [
+    "plano_general",
+    "plano_medio",
+    "primer_plano",
+    "detalle"
+  ],
+  "acciones": {
+    "idle": {},
+    "caminar_hasta": {
+      "pos": "xy"
+    },
+    "levantar": {
+      "objeto": "prop"
+    },
+    "soltar": {},
+    "senalar": {
+      "objetivo": "ref"
+    },
+    "hablar": {},
+    "asentir": {},
+    "negar": {},
+    "sentarse": {},
+    "escribir": {},
+    "mirar": {
+      "objetivo": "ref"
+    }
+  },
+  "expresiones": [
+    "neutral",
+    "feliz",
+    "sorpresa",
+    "preocupado",
+    "enojado",
+    "pensativo"
+  ],
+  "tipos_elenco": [
+    "persona",
+    "prop"
+  ],
+  "persona_params": {
+    "edad": [
+      "nino",
+      "joven",
+      "adulto",
+      "mayor"
+    ],
+    "complexion": [
+      "delgada",
+      "media",
+      "robusta"
+    ],
+    "ropa": [
+      "obrero_1890",
+      "comerciante_1890",
+      "noble_europeo_1700",
+      "funcionario_chino_qing",
+      "moderno_casual"
+    ],
+    "pelo": [
+      "calvo",
+      "corto_negro",
+      "corto_castano",
+      "largo_recogido",
+      "canoso"
+    ],
+    "barba": [
+      "ninguna",
+      "bigote",
+      "completa"
+    ]
+  },
+  "props": {
+    "lapiz": {
+      "color": "hex"
+    },
+    "libro": {},
+    "lampara_aceite": {},
+    "caja_madera": {},
+    "taza": {}
+  },
+  "soportes": [
+    "suelo",
+    "mesa"
+  ],
+  "limites": {
+    "actores_por_escena": {
+      "short": 2,
+      "largo": 4
+    },
+    "duracion_escena_max": 20.0,
+    "duracion_escena_min": 1.0,
+    "pos_max": 3.0
+  }
+}

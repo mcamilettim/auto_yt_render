@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "trabajo_id": "lapiz_001",
+  "formato": "short",
+  "fps": 24,
+  "resolucion": [
+    1080,
+    1920
+  ],
+  "calidad": "rapida",
+  "elenco": {
+    "trader": {
+      "tipo": "persona",
+      "params": {
+        "edad": "adulto",
+        "complexion": "media",
+        "ropa": "comerciante_1890",
+        "pelo": "corto_castano",
+        "barba": "bigote",
+        "piel": "#c68642"
+      }
+    },
+    "lapiz": {
+      "tipo": "prop",
+      "nombre": "lapiz",
+      "params": {
+        "color": "#f2c200"
+      }
+    }
+  },
+  "escenas": [
+    {
+      "id": "e01",
+      "duracion": 4.2,
+      "set": "taller_1890",
+      "luz": "interior_calido",
+      "camara": {
+        "movimiento": "dolly_in",
+        "desde": "plano_general",
+        "hasta": "plano_medio",
+        "objetivo": "trader"
+      },
+      "actores": [
+        {
+          "ref": "trader",
+          "pos": [
+            -1.0,
+            0.0
+          ],
+          "mira_a": "camara",
+          "acciones": [
+            {
+              "t": 0.0,
+              "accion": "idle",
+              "expresion": "neutral"
+            },
+            {
+              "t": 0.5,
+              "accion": "caminar_hasta",
+              "pos": [
+                0.5,
+                0.2
+              ]
+            },
+            {
+              "t": 2.0,
+              "accion": "levantar",
+              "objeto": "lapiz"
+            },
+            {
+              "t": 3.0,
+              "expresion": "sorpresa"
+            }
+          ]
+        }
+      ],
+      "props": [
+        {
+          "ref": "lapiz",
+          "pos": [
+            0.6,
+            0.3
+          ],
+          "sobre": "mesa"
+        }
+      ],
+      "texto_narracion": "In 1890 a humble pencil changed how merchants kept their books."
+    },
+    {
+      "id": "e02",
+      "duracion": 3.8,
+      "set": "escritorio_estudio",
+      "luz": "dia",
+      "camara": {
+        "movimiento": "fijo",
+        "desde": "plano_medio",
+        "hasta": "primer_plano",
+        "objetivo": "trader"
+      },
+      "actores": [
+        {
+          "ref": "trader",
+          "pos": [
+            0.0,
+            0.0
+          ],
+          "mira_a": "lapiz",
+          "acciones": [
+            {
+              "t": 0.0,
+              "accion": "hablar",
+              "expresion": "feliz"
+            },
+            {
+              "t": 1.5,
+              "accion": "senalar",
+              "objetivo": "lapiz"
+            }
+          ]
+        }
+      ],
+      "props": [
+        {
+          "ref": "lapiz",
+          "pos": [
+            0.3,
+            0.1
+          ],
+          "sobre": "mesa"
+        }
+      ],
+      "texto_narracion": "It was cheap, portable and never spilled."
+    }
+  ],
+  "assets_nuevos": []
+}

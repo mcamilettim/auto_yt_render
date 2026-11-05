@@ -4,3 +4,5 @@ __pycache__/
 salida/
 bench/resultados/*
 !bench/resultados/comparacion.png
+.venv/
+.pytest_cache/
