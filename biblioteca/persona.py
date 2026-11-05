@@ -4,7 +4,7 @@ persona(nombre, edad, complexion, piel, pelo, barba, ropa, estilo) -> dict R con
   R["arm"]   armature (huesos: hips, spine, head, upper_arm.L/R, forearm.L/R, thigh.L/R, shin.L/R)
   R["lids"]  empties de párpados [sup_izq, inf_izq, sup_der, inf_der]
   R["boca"]  objeto boca abierta (escala 0 = cerrada)
-  R["cejas"] empties de cejas (rotación x = levantar/bajar)
+  R["cejas"] tubos de cejas (subir/bajar moviendo location.z desde ceja["base_z"])
   R["mano.L"/"mano.R"] empties en las manos para tomar props
 Estilos: "caricatura" (cabeza grande, ~1.2 de alto), "realista" (proporciones humanas, ~1.65 de alto, ojos chicos)
 y "plano" (proporciones de caricatura con sombreado de dibujo animado y contorno negro).
@@ -182,14 +182,12 @@ def persona(nombre="persona", edad="adulto", complexion="media", piel=PIEL_POR_D
         R["eyes"].append(E)
         R["lids"] += lids
         color_ceja = PELOS.get(pelo) or (90, 70, 60)
-        ceja_pivote = empty(nombre + "_ceja", (s * R_CAB * 0.36, -R_CAB, z_cab + R_CAB * 0.38))
         ceja = tubo_cara(S, [(s * R_CAB * (0.36 + 0.2 * u), z_cab + R_CAB * (0.4 - 0.05 * abs(u) ** 1.5))
                              for u in [i / 4 - 0.5 for i in range(5)]], R_CAB * 0.055,
                          mat(nombre + "_ceja_m", color_ceja, 0.7), off=R_CAB * 0.04)
-        ceja.parent = ceja_pivote
-        ceja.matrix_parent_inverse = ceja_pivote.matrix_world.inverted()
-        bone_parent(ceja_pivote, arm, "head")
-        R["cejas"].append(ceja_pivote)
+        bone_parent(ceja, arm, "head")
+        R["cejas"].append(ceja)          # expresiones: se desplaza en z (espacio del hueso) desde ceja["base"]
+        ceja["base_z"] = ceja.location.z
     boca_puntos = [(R_CAB * 0.22 * u, z_cab - R_CAB * (0.45 + 0.06 * (1 - u * u))) for u in [i / 4 - 1 for i in range(9)]]
     boca = tubo_cara(S, boca_puntos, R_CAB * 0.04, mat(nombre + "_labios", (130, 50, 50), 0.4), off=R_CAB * 0.01)
     bone_parent(boca, arm, "head")
