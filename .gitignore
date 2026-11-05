@@ -2,3 +2,5 @@ bench/out/
 __pycache__/
 *.blend1
 salida/
+bench/resultados/*
+!bench/resultados/comparacion.png
