@@ -156,10 +156,43 @@ def campo_abierto():
     return {"mesa": _mesa(1.4, 1.0, 0.7, 1.0, 0.6)}
 
 
-SETS = {f.__name__: f for f in (taller_1890, puerto_1890, calle_victoriana, fabrica_1890, palacio_chino, sala_moderna,
-                               escritorio_estudio, campo_abierto)}
+def domus_romana():
+    sky_world((140, 180, 225), (235, 225, 205), 1.0)
+    _piso("mosaico", (200, 180, 150), (170, 140, 110), 14)
+    estuco = noisy("estuco", (215, 160, 120), (190, 135, 100), 3, 0.9)
+    box((0, 3.4, 1.8), (10, 0.25, 3.6), estuco, bevel=0)
+    box((0, 3.27, 0.5), (10, 0.02, 1.0), mat("zocalo_rojo", (150, 40, 35), 0.7), bevel=0)
+    marmol = noisy("marmol", (235, 230, 220), (205, 200, 190), 6, 0.35)
+    for x in (-3.0, -1.0, 1.0, 3.0):
+        cyl((x, 2.6, 1.5), 0.17, 3.0, marmol)
+        box((x, 2.6, 3.05), (0.45, 0.45, 0.12), marmol, bevel=0.01)
+    box((0, 2.6, 3.2), (7.0, 0.5, 0.2), marmol, bevel=0.01)
+    box((0, 1.6, 0.06), (2.2, 1.2, 0.12), marmol, bevel=0.02)
+    box((0, 1.6, 0.09), (2.0, 1.0, 0.04), mat("agua", (70, 140, 170), 0.05, spec=0.9), bevel=0)
+    return {"mesa": _mesa(-1.7, 0.9, 0.55, 1.2, 0.7, marmol)}
 
-INTERIORES = {"taller_1890", "fabrica_1890", "sala_moderna", "escritorio_estudio"}
+
+def iglesia_medieval():
+    world((40, 36, 32), 0.4)
+    _piso("losas", (140, 135, 125), (115, 110, 102), 5)
+    piedra = noisy("piedra_muro", (160, 150, 135), (130, 122, 110), 7, 0.95)
+    box((0, 3.6, 3.0), (12, 0.4, 6), piedra, bevel=0)
+    for x in (-4.0, 4.0):
+        box((x, 1.0, 3.0), (0.4, 6, 6), piedra, bevel=0)
+    for x in (-2.2, 2.2):
+        cyl((x, 2.8, 1.8), 0.28, 3.6, piedra)
+    _ventana((0, 3.38, 3.4), 0.8, 1.6, emision=5, color=(255, 215, 160))
+    altar = _mesa(0, 2.0, 0.95, 1.6, 0.7, noisy("altar", (190, 180, 165), (160, 150, 138), 4, 0.8))
+    for x in (-0.6, 0.6):
+        cyl((x, 2.0, 1.08), 0.03, 0.26, mat("cera", (245, 235, 210), 0.6))
+        sphere((x, 2.0, 1.24), 0.025, mat("llama", (255, 190, 90), 0.2, emit=12))
+    return {"mesa": altar}
+
+
+SETS = {f.__name__: f for f in (taller_1890, puerto_1890, calle_victoriana, fabrica_1890, palacio_chino, sala_moderna,
+                               escritorio_estudio, campo_abierto, domus_romana, iglesia_medieval)}
+
+INTERIORES = {"taller_1890", "fabrica_1890", "sala_moderna", "escritorio_estudio", "iglesia_medieval"}
 
 
 def luz(nombre: str, set_nombre: str) -> None:
@@ -240,4 +273,11 @@ def taza(color=None):
     return raiz, 0.0
 
 
-PROPS = {"lapiz": lapiz, "libro": libro, "lampara_aceite": lampara_aceite, "caja_madera": caja_madera, "taza": taza}
+def anillo(color=None):
+    raiz = empty("anillo")
+    c = _hex(color, (215, 175, 70))
+    torus((0, 0, 0.035), 0.035, 0.009, mat("anillo_" + str(c), c, 0.25, metal=0.9), raiz, rot=(math.pi / 2, 0, 0))
+    return raiz, 0.0
+
+
+PROPS = {"anillo": anillo, "lapiz": lapiz, "libro": libro, "lampara_aceite": lampara_aceite, "caja_madera": caja_madera, "taza": taza}

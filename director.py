@@ -188,8 +188,42 @@ def cargar(ruta_storyboard, id_escena):
     return d, escena
 
 
+def _asset(d, nombre):
+    return next((a for a in d.get("assets_nuevos", []) if a.get("nombre") == nombre), None)
+
+
+def construir_set(d, nombre):
+    if nombre in SETS:
+        return SETS[nombre]() or {}
+    from biblioteca.assets import ejecutar, set_respaldo
+    asset = _asset(d, nombre)
+    try:
+        return ejecutar(asset["codigo"], "set")
+    except Exception as error:  # el video sale igual con un set neutro
+        print(f"ASSET RESPALDO set {nombre}: {error}", flush=True)
+        for o in list(bpy.data.objects):
+            if o.type != "CAMERA":
+                bpy.data.objects.remove(o)
+        return set_respaldo(nombre)
+
+
+def construir_prop(d, nombre, params):
+    if nombre in PROPS:
+        return PROPS[nombre](**params)
+    from biblioteca.assets import ejecutar, prop_respaldo
+    asset = _asset(d, nombre)
+    antes = set(bpy.data.objects)
+    try:
+        return ejecutar(asset["codigo"], "prop", params)
+    except Exception as error:
+        print(f"ASSET RESPALDO prop {nombre}: {error}", flush=True)
+        for o in set(bpy.data.objects) - antes:
+            bpy.data.objects.remove(o)
+        return prop_respaldo(nombre, params.get("color"))
+
+
 def construir(d, escena, estilo):
-    info_set = SETS[escena["set"]]() or {}
+    info_set = construir_set(d, escena["set"])
     if scene.world is None:
         from biblioteca.base import world
         world((70, 64, 58), 0.5)
@@ -205,7 +239,7 @@ def construir(d, escena, estilo):
     mesa = info_set.get("mesa")
     for p in escena.get("props", []):
         spec = d["elenco"][p["ref"]]
-        raiz, apoyo = PROPS[spec["nombre"]](**(spec.get("params") or {}))
+        raiz, apoyo = construir_prop(d, spec["nombre"], spec.get("params") or {})
         z = apoyo
         x, y = p["pos"]
         if p["sobre"] == "mesa":

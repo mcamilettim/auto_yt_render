@@ -30,7 +30,9 @@
     "palacio_chino": "Qing dynasty palace courtyard, red columns",
     "sala_moderna": "Modern living room, sofa, window",
     "escritorio_estudio": "Study desk with books and lamp",
-    "campo_abierto": "Open meadow with hills and sky"
+    "campo_abierto": "Open meadow with hills and sky",
+    "domus_romana": "Ancient Roman house atrium with columns and a low stone table",
+    "iglesia_medieval": "Early medieval stone church interior with arches, candles and an altar"
   },
   "luces": [
     "dia",
@@ -104,7 +106,14 @@
       "comerciante_1890",
       "noble_europeo_1700",
       "funcionario_chino_qing",
-      "moderno_casual"
+      "moderno_casual",
+      "toga_romana",
+      "campesino_medieval",
+      "clerigo",
+      "militar_1940",
+      "egipcio_antiguo",
+      "vestido_1890",
+      "vestido_moderno"
     ],
     "pelo": [
       "calvo",
@@ -126,7 +135,10 @@
     "libro": {},
     "lampara_aceite": {},
     "caja_madera": {},
-    "taza": {}
+    "taza": {},
+    "anillo": {
+      "color": "hex"
+    }
   },
   "soportes": [
     "suelo",
