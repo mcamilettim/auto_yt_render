@@ -143,7 +143,7 @@ def persona(nombre="persona", edad="adulto", complexion="media", piel=PIEL_POR_D
     r = ROPAS[ropa]
     zc = r["largo_chaqueta"]
     ancho_pierna = cad_x + P["pierna"] * 1.6
-    es_brazo = lambda c: abs(c.x) > ancho_torso
+    es_brazo = lambda c: abs(c.x) > ancho_torso and c.z < z_hom + 0.06   # sin el tope: las orejas quedaban vestidas
     manga = lambda c: es_brazo(c) and c.z > P["mano_z"] + 0.04
     camisa = deform_copy(cuerpo, arm, nombre + "_camisa",
                          lambda c: (not es_brazo(c) and z_cad - 0.04 < c.z < z_cue + 0.02) or (manga(c) and c.z > z_cad - 0.1),

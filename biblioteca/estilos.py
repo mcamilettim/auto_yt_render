@@ -28,9 +28,9 @@ def toon(m: bpy.types.Material) -> None:
     rampa = nt.nodes.new("ShaderNodeValToRGB")
     rampa.color_ramp.interpolation = "CONSTANT"
     rampa.color_ramp.elements[0].position = 0.0
-    rampa.color_ramp.elements[0].color = (0.45, 0.45, 0.5, 1)
+    rampa.color_ramp.elements[0].color = (0.62, 0.62, 0.68, 1)
     rampa.color_ramp.elements[1].position = 0.18
-    rampa.color_ramp.elements[1].color = (1, 1, 1, 1)
+    rampa.color_ramp.elements[1].color = (1.15, 1.15, 1.15, 1)
     mezcla = nt.nodes.new("ShaderNodeMix")
     mezcla.data_type = "RGBA"
     mezcla.blend_type = "MULTIPLY"

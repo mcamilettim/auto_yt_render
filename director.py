@@ -207,11 +207,15 @@ def construir(d, escena, estilo):
         spec = d["elenco"][p["ref"]]
         raiz, apoyo = PROPS[spec["nombre"]](**(spec.get("params") or {}))
         z = apoyo
+        x, y = p["pos"]
         if p["sobre"] == "mesa":
-            if mesa is None or math.dist(mesa[:2], p["pos"]) > 0.7:
-                mesa = _mesa(p["pos"][0], p["pos"][1] + 0.05, 0.72, 0.8, 0.5)
+            if mesa is None:
+                mesa = _mesa(x, y + 0.05, 0.72, 0.8, 0.5)
+            else:                       # se apoya en la mesa del escenario, sin crear otra encima
+                x = mesa[0] + max(-0.35, min(0.35, x - mesa[0]))
+                y = mesa[1] + max(-0.2, min(0.2, y - mesa[1]))
             z += mesa[2]
-        raiz.location = (p["pos"][0], p["pos"][1], z)
+        raiz.location = (x, y, z)
         props[p["ref"]] = {"obj": raiz, "reposo": Vector(raiz.location), "rot_reposo": Euler(raiz.rotation_euler)}
     return actores, props
 
@@ -331,6 +335,7 @@ def hornear(d, escena, actores, props, cam, fps, desde, hasta):
             ultima_pose[ref] = pose
             # rumbo del cuerpo
             mira = est["mira_a"]
+            completo = None          # ángulo al que mira de verdad; el cuerpo gira una parte y la cabeza el resto
             if caminando and rumbo is not None:
                 rotz = rumbo
             elif activo and activo[2].get("accion") in ("senalar", "mirar") and activo[2].get("objetivo") in {**actores, **props}:
@@ -339,12 +344,15 @@ def hornear(d, escena, actores, props, cam, fps, desde, hasta):
                     destino = tuple(props[obj]["obj"].location)[:2]
                 else:
                     destino = posiciones.get(obj, estados[obj]["pos0"] if obj in estados else (x, y - 1))
-                rotz = angulo_hacia((x, y), destino) or 0.0
+                completo = angulo_hacia((x, y), destino) or 0.0
+                rotz = 0.55 * completo
             elif mira in props:
-                rotz = angulo_hacia((x, y), tuple(props[mira]["reposo"])[:2]) or 0.0
+                completo = angulo_hacia((x, y), tuple(props[mira]["reposo"])[:2]) or 0.0
+                rotz = 0.45 * completo
             elif mira in actores and mira != ref:
                 otro = estados[mira]["pos0"]
-                rotz = angulo_hacia((x, y), otro) or 0.0
+                completo = angulo_hacia((x, y), otro) or 0.0
+                rotz = 0.55 * completo
             else:
                 rotz = angulo_hacia((x, y), (cam["pos"].x, cam["pos"].y)) or 0.0
                 rotz *= 0.6        # hacia la cámara, sin girar del todo
@@ -353,6 +361,10 @@ def hornear(d, escena, actores, props, cam, fps, desde, hasta):
             if previo is not None:
                 rotz = mezclar_angulo(previo, rotz, 0.18)
             arm["rotz_prev"] = rotz
+            pose = {h: list(v) for h, v in pose.items()}      # copia: el giro de cabeza no se acumula en la mezcla
+            if completo is not None:
+                giro = (completo - rotz + math.pi) % (2 * math.pi) - math.pi
+                pose["head"][1] += max(-0.8, min(0.8, giro))
             z_base = 0.0
             if activo and activo[2]["accion"] == "sentarse":
                 z_base = -(R["z_cad"] - R["z_rod"]) * R.get("escala", 1.0) * suave((t - activo[0]) / 0.6)
