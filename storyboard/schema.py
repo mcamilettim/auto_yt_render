@@ -194,6 +194,8 @@ class _Validador:
                     f"resolucion: {d.get('resolucion')!r} must be {esperado} for formato '{formato}'"
                 )
         self.en_lista(d.get("calidad"), self.cat.get("calidades", []), "calidad", "calidad")
+        if "estilo" in d:
+            self.en_lista(d.get("estilo"), self.cat.get("estilos", []), "estilo", "estilo")
 
         self.elenco = self.validar_elenco(d.get("elenco"))
 

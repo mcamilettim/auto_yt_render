@@ -136,7 +136,8 @@ def persona(nombre="persona", edad="adulto", complexion="media", piel=PIEL_POR_D
     ])
     skin_to(cuerpo, arm)
     S = Surf(cuerpo)
-    R = {"arm": arm, "lids": [], "eyes": [], "cejas": [], "body": cuerpo, "estilo": estilo, "altura": z_cab + R_CAB}
+    R = {"arm": arm, "lids": [], "eyes": [], "cejas": [], "body": cuerpo, "estilo": estilo, "altura": z_cab + R_CAB,
+         "R_cab": R_CAB, "z_cad": z_cad, "z_rod": z_rod}
 
     # ---------- ropa ----------
     r = ROPAS[ropa]

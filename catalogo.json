@@ -17,6 +17,11 @@
     "rapida",
     "completa"
   ],
+  "estilos": [
+    "caricatura",
+    "realista",
+    "plano"
+  ],
   "sets": {
     "taller_1890": "Victorian workshop with workbench, tools, window light",
     "puerto_1890": "Harbour dock with crates, ship hull, sea",

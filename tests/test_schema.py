@@ -374,3 +374,17 @@ def test_ajustar_duraciones_clamp_no_negativo(sb):
 def test_ajustar_duraciones_largo_distinto(sb):
     with pytest.raises(ValueError):
         ajustar_duraciones(sb, [1.0])
+
+
+def test_estilo_opcional_valido_e_invalido():
+    import copy
+    cat = cargar_catalogo()
+    base = json.loads((Path(__file__).resolve().parents[1] / "escenas" / "ejemplo_lapiz.json").read_text(encoding="utf-8"))
+    for estilo in ("caricatura", "realista", "plano"):
+        d = copy.deepcopy(base)
+        d["estilo"] = estilo
+        assert validar_storyboard(d, cat) == []
+    d = copy.deepcopy(base)
+    d["estilo"] = "anime"
+    errores = validar_storyboard(d, cat)
+    assert any(e.startswith("estilo:") and "anime" in e for e in errores)

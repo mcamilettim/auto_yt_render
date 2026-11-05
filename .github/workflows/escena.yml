@@ -1,0 +1,47 @@
+name: escena
+# Renderiza una escena de un storyboard con el director y la entrega como mp4 (artefacto).
+on:
+  workflow_dispatch:
+    inputs:
+      storyboard:
+        default: escenas/ejemplo_lapiz.json
+      escena:
+        default: e01
+      estilo:
+        type: choice
+        options: [segun-storyboard, caricatura, realista, plano]
+        default: segun-storyboard
+      hasta:
+        description: "Último cuadro (vacío = toda la escena)"
+        default: ""
+
+jobs:
+  escena:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/blender
+      - name: Director
+        run: |
+          EXTRA=""
+          [ "${{ inputs.estilo }}" != "segun-storyboard" ] && EXTRA="$EXTRA --estilo ${{ inputs.estilo }}"
+          [ -n "${{ inputs.hasta }}" ] && EXTRA="$EXTRA --hasta ${{ inputs.hasta }}"
+          herramientas/blender.sh -P director.py -- "${{ inputs.storyboard }}" "${{ inputs.escena }}" salida/cuadros $EXTRA > director.log 2>&1 || true
+          grep -E "CONSTRUCCION|HORNEADO|DIRECTOR OK|Traceback|Error" director.log | tail -30
+          grep "DIRECTOR OK" director.log >> "$GITHUB_STEP_SUMMARY" || { tail -40 director.log; exit 1; }
+      - name: mp4
+        run: |
+          FPS=$(python3 -c "import json;print(json.load(open('${{ inputs.storyboard }}'))['fps'])")
+          ffmpeg -y -loglevel error -framerate $FPS -start_number $(ls salida/cuadros | head -1 | sed 's/\.png//;s/^0*//') \
+            -i salida/cuadros/%04d.png -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -pix_fmt yuv420p -crf 20 \
+            "salida/${{ inputs.escena }}.mp4"
+          ls -la salida
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: escena-${{ inputs.escena }}-${{ github.run_id }}
+          path: |
+            salida/*.mp4
+            director.log
+          retention-days: 7
