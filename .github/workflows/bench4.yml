@@ -1,0 +1,71 @@
+name: bench4
+# Compara 4 formas de renderizar la misma escena animada, en paralelo.
+on:
+  workflow_dispatch:
+    inputs:
+      frames:
+        default: "24"
+      orient:
+        type: choice
+        options: [vertical, horizontal]
+        default: vertical
+
+jobs:
+  variante:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {nombre: eevee40_pelo,     blender: apt, motor: eevee,  sin_pelo: "0"}
+          - {nombre: eevee40_sin_pelo, blender: apt, motor: eevee,  sin_pelo: "1"}
+          - {nombre: eevee42_pelo,     blender: "4.2", motor: eevee,  sin_pelo: "0"}
+          - {nombre: cycles42_pelo,    blender: "4.2", motor: cycles, sin_pelo: "0"}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencias
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb xauth libegl1 libgl1-mesa-dri fonts-dejavu-core ffmpeg \
+            libxi6 libxxf86vm1 libxfixes3 libxrender1 libsm6 libxkbcommon0 libx11-6 libxext6
+      - name: Blender de Ubuntu (4.0.2)
+        if: matrix.blender == 'apt'
+        run: |
+          sudo apt-get install -y --no-install-recommends blender
+          echo "BLENDER=blender" >> "$GITHUB_ENV"
+      - name: Blender 4.2 LTS oficial
+        if: matrix.blender == '4.2'
+        run: |
+          ARCHIVO=$(curl -s https://download.blender.org/release/Blender4.2/ | grep -o 'blender-4\.2\.[0-9]*-linux-x64\.tar\.xz' | sort -uV | tail -1)
+          echo "Descargando $ARCHIVO"
+          curl -sSL -o blender.tar.xz "https://download.blender.org/release/Blender4.2/$ARCHIVO"
+          mkdir -p "$HOME/blender" && tar -xf blender.tar.xz -C "$HOME/blender" --strip-components=1
+          echo "BLENDER=$HOME/blender/blender" >> "$GITHUB_ENV"
+      - run: $BLENDER --version | head -1 && nproc && free -g
+      - name: Bench
+        env:
+          FAST: "1"
+          FRAMES: ${{ inputs.frames }}
+          ORIENT: ${{ inputs.orient }}
+          MOTOR: ${{ matrix.motor }}
+          SIN_PELO: ${{ matrix.sin_pelo }}
+          ETIQUETA: ${{ matrix.nombre }}
+        run: |
+          xvfb-run -a -s "-screen 0 1920x1080x24" $BLENDER -b -P bench/bench_anim.py > bench.log 2>&1 || true
+          grep -E "BENCH|IGNORADO|Error|Traceback" bench.log || tail -40 bench.log
+          grep BENCH bench.log >> "$GITHUB_STEP_SUMMARY" || { echo "${{ matrix.nombre }}: SIN RESULTADO" >> "$GITHUB_STEP_SUMMARY"; tail -20 bench.log >> "$GITHUB_STEP_SUMMARY"; }
+      - name: Video de muestra
+        run: |
+          for d in bench/out/*/; do
+            [ -f "${d}0001.png" ] && ffmpeg -y -loglevel error -framerate 24 -i "$d%04d.png" -c:v libx264 -pix_fmt yuv420p "${d%/}.mp4"
+          done
+          ls -la bench/out || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bench4-${{ matrix.nombre }}
+          path: |
+            bench/out/*.mp4
+            bench.log
+          retention-days: 7
