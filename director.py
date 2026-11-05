@@ -445,7 +445,7 @@ def hornear(d, escena, actores, props, cam, fps, desde, hasta):
             o.keyframe_insert("location", frame=f)
             o.keyframe_insert("rotation_euler", frame=f)
         # cámara
-        mover_camara(cam, camara, objetivo, posiciones[camara["objetivo"]], t, dur, f)
+        mover_camara(cam, camara, objetivo, posiciones[camara["objetivo"]], t, dur, f, objetivo["arm"].rotation_euler.z)
 
 
 def crear_camara(d):
@@ -460,7 +460,7 @@ def crear_camara(d):
     return {"obj": cam, "pos": Vector((0, -6, 1.2))}
 
 
-def mover_camara(cam, camara, R, pos_xy, t, dur, f):
+def mover_camara(cam, camara, R, pos_xy, t, dur, f, rumbo_objetivo=0.0):
     k = suave(t / dur) if dur > 0 else 1.0
     mov = camara["movimiento"]
     alto_a, frac_a = PLANOS[camara["desde"]]
@@ -474,18 +474,23 @@ def mover_camara(cam, camara, R, pos_xy, t, dur, f):
     foco_z = lerp(frac_a, frac_b, k) * estatura
     medio_fov = math.atan(12 / 35)
     distancia = visible / 2 / math.tan(medio_fov)
-    azimut = math.radians(8)
+    # la cámara se ubica del lado hacia donde mira el personaje (nunca de espaldas), con un leve ángulo
+    base = 0.75 * ((rumbo_objetivo + math.pi) % (2 * math.pi) - math.pi)
+    previo = cam.get("base")
+    base = base if previo is None else mezclar_angulo(previo, base, 0.06)
+    cam["base"] = base
+    azimut = base + math.radians(8)
     elevacion = 0.08 * estatura
     lateral = 0.0
     if mov == "orbita":
-        azimut = math.radians(lerp(-30, 30, k))
+        azimut = base + math.radians(lerp(-30, 30, k))
     elif mov == "paneo_izq":
         lateral = lerp(0.6, -0.6, k)
     elif mov == "paneo_der":
         lateral = lerp(-0.6, 0.6, k)
     elif mov == "grua_arriba":
         elevacion = lerp(0.0, 0.9 * estatura, k)
-    foco = Vector((pos_xy[0] + lateral, pos_xy[1], foco_z))
+    foco = Vector((pos_xy[0] + lateral * math.cos(azimut), pos_xy[1] + lateral * math.sin(azimut), foco_z))
     pos = foco + Vector((math.sin(azimut) * distancia, -math.cos(azimut) * distancia, elevacion))
     o = cam["obj"]
     o.location = pos

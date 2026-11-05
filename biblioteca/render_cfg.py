@@ -18,9 +18,6 @@ def configurar_render(ancho: int, alto: int, calidad: str = "rapida", fps: int =
     scene.eevee.taa_render_samples = muestras
     ajustes = [("use_shadows", True), ("use_raytracing", False), ("use_gtao", calidad == "completa"),
                ("gtao_distance", 0.3), ("fast_gi_method", "GLOBAL_ILLUMINATION")]
-    if calidad == "rapida":   # sombras más baratas: el render en CPU sin GPU es el cuello de botella
-        ajustes += [("shadow_ray_count", 1), ("shadow_step_count", 2), ("shadow_resolution_scale", 0.5),
-                    ("use_shadow_jitter_viewport", False), ("use_volumetric_shadows", False)]
     for nombre, valor in ajustes:
         if hasattr(scene.eevee, nombre):
             try:
