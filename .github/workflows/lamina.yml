@@ -1,0 +1,31 @@
+name: lamina
+# Renderiza una lámina de herramientas/ con Blender LTS oficial y la sube como artefacto.
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        default: herramientas/lamina_estilos.py
+      args:
+        default: salida/lamina.png
+
+jobs:
+  lamina:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Blender
+        uses: ./.github/actions/blender
+      - name: Render
+        run: |
+          herramientas/blender.sh -P "${{ inputs.script }}" -- ${{ inputs.args }} > lamina.log 2>&1 || true
+          grep -E "PERSONA|CONSTRUCCION|LAMINA|Traceback|Error" lamina.log | tail -40
+          grep -q "LAMINA OK" lamina.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lamina-${{ github.run_id }}
+          path: |
+            salida/*.png
+            lamina.log
+          retention-days: 7
