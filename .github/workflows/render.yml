@@ -1,0 +1,106 @@
+name: render
+# Renderiza un storyboard completo en paralelo (tramos de cuadros) y avisa al repo privado para ensamblar.
+# Lo dispara el repo privado (preparar.yml). El storyboard viaja comprimido (gzip + base64) en el input.
+on:
+  workflow_dispatch:
+    inputs:
+      trabajo_id:
+        required: true
+      storyboard:
+        description: storyboard.json en gzip + base64
+        required: true
+      origen_run:
+        description: run id de preparar.yml en el repo privado ("" = no avisar)
+        default: ""
+
+concurrency:
+  group: render-${{ inputs.trabajo_id }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      matriz: ${{ steps.p.outputs.matriz }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: |
+          echo "${{ inputs.storyboard }}" | base64 -d | gunzip > storyboard.json
+          python3 -c "import json,sys; sys.path.insert(0,'.'); from storyboard.schema import cargar_catalogo, validar_storyboard; e=validar_storyboard(json.load(open('storyboard.json')), cargar_catalogo()); print('\n'.join(e)); sys.exit(1 if e else 0)"
+          echo "matriz=$(python3 herramientas/plan_trozos.py storyboard.json)" >> "$GITHUB_OUTPUT"
+          python3 herramientas/plan_trozos.py storyboard.json | python3 -c "import json,sys; print(len(json.load(sys.stdin)['include']), 'tramos')" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storyboard-${{ inputs.trabajo_id }}
+          path: storyboard.json
+          retention-days: 3
+
+  tramo:
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    strategy:
+      fail-fast: true
+      max-parallel: 20
+      matrix: ${{ fromJson(needs.plan.outputs.matriz) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: storyboard-${{ inputs.trabajo_id }}
+      - uses: ./.github/actions/blender
+      - name: Director
+        run: |
+          herramientas/blender.sh -P director.py -- storyboard.json ${{ matrix.escena }} salida/cuadros \
+            --desde ${{ matrix.desde }} --hasta ${{ matrix.hasta }} --total ${{ matrix.total }} > director.log 2>&1 || true
+          grep -E "DIRECTOR OK|Traceback|Error" director.log | tail -20
+          grep -q "DIRECTOR OK" director.log || { tail -60 director.log; exit 1; }
+          N=$(ls salida/cuadros/*.png | wc -l); ESPERADO=$(( ${{ matrix.hasta }} - ${{ matrix.desde }} + 1 ))
+          [ "$N" -eq "$ESPERADO" ] || { echo "cuadros $N != $ESPERADO"; exit 1; }
+      - name: Tramo mp4
+        run: |
+          FPS=$(python3 -c "import json;print(json.load(open('storyboard.json'))['fps'])")
+          ffmpeg -y -loglevel error -framerate $FPS -start_number ${{ matrix.desde }} -i salida/cuadros/%04d.png \
+            -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset veryfast -crf 18 -pix_fmt yuv420p -r $FPS \
+            "${{ matrix.nombre }}.mp4"
+          python3 - <<'EOF'
+          import subprocess, sys
+          r = subprocess.run(["ffmpeg", "-v", "error", "-i", "${{ matrix.nombre }}.mp4", "-vf", "blackdetect=d=0.5:pix_th=0.02",
+                              "-an", "-f", "null", "-"], capture_output=True, text=True)
+          if "black_start" in r.stderr:
+              sys.exit("tramo con cuadros negros: " + r.stderr[-300:])
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tramo-${{ matrix.nombre }}
+          path: ${{ matrix.nombre }}.mp4
+          retention-days: 2
+
+  unir:
+    needs: [plan, tramo]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tramo-*
+          merge-multiple: true
+          path: tramos
+      - name: Concatenar en orden
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          ls tramos/*.mp4 | sort | sed "s/^/file '/;s/$/'/" > lista.txt
+          ffmpeg -y -loglevel error -f concat -safe 0 -i lista.txt -c copy video.mp4
+          ffprobe -v error -show_entries stream=width,height,nb_frames -show_entries format=duration -of compact video.mp4 | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: render-${{ inputs.trabajo_id }}
+          path: video.mp4
+          retention-days: 3
+      - name: Avisar al repo privado
+        if: inputs.origen_run != ''
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_YT_DISPATCH_TOKEN }}
+        run: |
+          gh workflow run ensamblar.yml -R mcamilettim/auto_yt \
+            -f origen_run=${{ inputs.origen_run }} -f render_run=${{ github.run_id }} -f trabajo_id=${{ inputs.trabajo_id }}

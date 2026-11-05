@@ -1,6 +1,6 @@
 """Director: convierte una escena del storyboard en cuadros PNG animados.
 
-    herramientas/blender.sh -P director.py -- storyboard.json e01 salida/e01 [--desde 1 --hasta N] [--estilo caricatura]
+    herramientas/blender.sh -P director.py -- storyboard.json e01 salida/e01 [--desde 1 --hasta N] [--total N] [--estilo caricatura]
 
 Todo se hornea en keyframes cuadro a cuadro (pose, ubicación, cámara, props), así el render es determinista y se
 puede partir por tramos de cuadros en distintos runners.
@@ -457,7 +457,7 @@ def main():
     d, escena = cargar(ruta, id_escena)
     fps = d["fps"]
     estilo = opciones.get("--estilo") or d.get("estilo", "caricatura")
-    total = max(1, math.ceil(escena["duracion"] * fps))
+    total = int(opciones.get("--total", max(1, math.ceil(escena["duracion"] * fps))))
     desde = int(opciones.get("--desde", 1))
     hasta = min(int(opciones.get("--hasta", total)), total)
     actores, props = construir(d, escena, estilo)
@@ -466,7 +466,7 @@ def main():
         from biblioteca.estilos import aplicar_plano
         aplicar_plano(list(bpy.data.objects))
     print("CONSTRUCCION", round(time.time() - t0, 1), flush=True)
-    hornear(d, escena, actores, props, cam, fps, desde, hasta)
+    hornear(d, escena, actores, props, cam, fps, 1, hasta)   # siempre desde 1: los tramos empalman sin saltos
     print("HORNEADO", round(time.time() - t0, 1), flush=True)
     ancho, alto = d["resolucion"]
     configurar_render(ancho, alto, d.get("calidad", "rapida"), fps)
